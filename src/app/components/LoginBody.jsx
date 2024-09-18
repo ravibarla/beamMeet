@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import HomeLeftBackground from "./HomeLeftBackground";
 import LoginForm from "./LoginForm";
