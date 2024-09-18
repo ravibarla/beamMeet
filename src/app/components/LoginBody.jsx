@@ -1,5 +1,5 @@
 import React from "react";
-import HomeLeftBackground from "./homeLeftBackground";
+import HomeLeftBackground from "./HomeLeftBackground";
 import LoginForm from "./LoginForm";
 
 const LoginBody = () => {
