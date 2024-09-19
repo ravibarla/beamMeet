@@ -1,69 +1,48 @@
 const cors = require("cors");
 const express = require("express");
-const http = require("http");
-const ws = require("ws");
 const connectDB = require("./config");
 const router = require("./routes");
+const socketIo = require("socket.io");
+const http = require("http");
 connectDB();
 const PORT = 8081;
-const WebSocket = require("ws");
-
 const app = express();
 
 //middleware
-
-app.use(router);
-// app.use(cors());
-// app.use(
-//   cors({
-//     origin: "*", // Replace with your frontend URL
-//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-//     credentials: true
-//   })
-// );
+const corsOptions = {
+  origin: "*", // Allow specific origin
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow specific headers
+  credentials: true, // Enable cookies to be sent across domains
+};
+app.use(cors(corsOptions));
 app.use(express.json());
-//create server
-const httpServer = http.createServer(app);
-const wss = new WebSocket.Server({ server: httpServer });
+app.use(router);
 
-//websocket signalling
-wss.on("connection", (ws) => {
-  ws.on("message", (message) => {
-    const data = JSON.parse(message);
-    switch (data.type) {
-      case "join-room":
-        ws.roomId = data.roomId;
-        broadcast(ws.roomId, data); // Notify others in the room
-        break;
+// WebSocket for signaling
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: "*", // Allow this origin
+    methods: ["GET", "POST"],
+  },
+});
+io.on("connection", (socket) => {
+  console.log("New client connected");
 
-      case "offer":
-      case "answer":
-      case "candidate":
-        broadcast(ws.roomId, data); // Broadcast signaling data (SDP, ICE) to peers
-        break;
-
-      default:
-        break;
-    }
+  socket.on("message", (data) => {
+    // Handle incoming messages
+    io.emit("message", data);
   });
-  ws.on("close", () => {
-    console.log("User disconnected");
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
   });
 });
-// Helper function to broadcast to all clients in the same room
-function broadcast(roomId, data) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
-      client.send(JSON.stringify(data));
-    }
-  });
-}
 
 // app.listen(PORT, () => {
 //   console.log("app is listening in ", PORT);
 // });
-
-// Start HTTP server
-httpServer.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log("Server is running on port :", PORT);
 });
