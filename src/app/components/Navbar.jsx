@@ -19,7 +19,7 @@ const Navbar = () => {
         resources
       </div>
       <div className="flex justify-center items-center border border-black w-[10%]">
-        plans & pricing
+        Logout
       </div>
     </div>
   );

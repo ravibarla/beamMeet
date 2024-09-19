@@ -1,8 +1,44 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import "../globals.css";
 import { CiKeyboard } from "react-icons/ci";
 import Navbar from "../components/Navbar";
+import { useAppContext } from "../context/Context";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 function Homepage() {
+  const router = useRouter();
+  const { user, room, loginUser, createRoom } = useAppContext();
+  const [roomName, setRoomName] = useState("");
+  const handleCreateRoom = async (e) => {
+    e.preventDefault();
+    let id = user.id || null;
+    try {
+      const res = await axios.post(`http://localhost:8081/api/create/${id}`);
+      if (res.data.data) {
+        const { roomName, roomId } = res.data.data;
+        console.log("roomName :", roomName);
+        createRoom(roomName, roomId);
+        router.push("/chatroom");
+      }
+    } catch (err) {
+      console.log("error :", err);
+    }
+  };
+  const handeJoinRoom = async (e) => {
+    e.preventDefault();
+    let id = user.id || null;
+    try {
+      const res = await axios.post(
+        `http://localhost:8081/api/${id}/join/${roomName}`
+      );
+      if (res) {
+        router.push("/chatroom");
+      }
+    } catch (err) {
+      console.log("error :", err);
+    }
+  };
   return (
     <div className="flex w-full h-screen justify-center">
       {/*left body*/}
@@ -17,7 +53,10 @@ function Homepage() {
             secure, and reliable video chat made easy for everyone.
           </p>
           <div className="flex py-9">
-            <button class="bg-blue-500 hover:bg-blue-700 rounded-lg text-white font-bold py-2 px-4 mx-6 rounded">
+            <button
+              onClick={(e) => handleCreateRoom(e)}
+              className="bg-blue-500 hover:bg-blue-700 rounded-lg text-white font-bold py-2 px-4 mx-6 rounded"
+            >
               New Meeting
             </button>
             <div className="border border-2 rounded-lg border-blue-500 flex justify-center items-center">
@@ -25,9 +64,14 @@ function Homepage() {
               <input
                 placeholder="enter a code"
                 className="outline-none focus:ring-0"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
               />
             </div>
-            <button class="text-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 mx-6 rounded">
+            <button
+              className="text-blue-500  font-bold py-2 px-4 mx-6 rounded"
+              onClick={(e) => handeJoinRoom(e)}
+            >
               Join
             </button>
           </div>

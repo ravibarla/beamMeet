@@ -1,22 +1,27 @@
+"use client";
 import axios from "axios";
 import React, { useState } from "react";
 import { FaCircleUser } from "react-icons/fa6";
+import { useAppContext } from "../context/Context"
+import { useRouter } from "next/navigation";
 const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
+  const { user, room, loginUser, createRoom } = useAppContext();
+  const router = useRouter();
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:8081/api/login",
-        {
-          username,
-          password,
-        },
-        { withCredentials: true }
-      );
-      console.log("successfully logged in :", res);
+      const res = await axios.post("http://localhost:8081/api/login", {
+        username,
+        password,
+      });
+      console.log("successfully logged in :");
+      if (res.data.data[0]) {
+        const { username, _id: id } = res.data.data[0];
+        loginUser(username, id);
+        router.push("/welcomepage");
+      }
     } catch (err) {
       console.log("error in logging in :", err);
     }
